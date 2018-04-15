@@ -1,0 +1,47 @@
+{
+  "bonus_table": [
+    [
+      3,
+      -3
+    ],
+    [
+      5,
+      -2
+    ],
+    [
+      8,
+      -1
+    ],
+    [
+      12,
+      0
+    ],
+    [
+      15,
+      1
+    ],
+    [
+      17,
+      2
+    ],
+    [
+      18,
+      3
+    ]
+  ],
+  "abilities": [
+    "STR",
+    "DEX",
+    "CON",
+    "INT",
+    "WIS",
+    "CHA"
+  ],
+  "saving_throws": [
+    "Paralyze",
+    "Poison",
+    "Breath",
+    "Device",
+    "Magic"
+  ]
+}

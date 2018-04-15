@@ -5,15 +5,17 @@ Created on Sun Apr 15 17:25:03 2018
 @author: silas
 """
 
-class PC:
+from core import roll as _roll, ruleset as _ruleset
+
+class PlayerCharacter:
     '''Docstring is TODO'''
-    def __init__(self):
-        self.attributes = dict(STR = 10,
-                               DEX = 10,
-                               CON = 10,
-                               INT = 10,
-                               WIS = 10,
-                               CHA = 10)
+    def __init__(self, name:str):
+        self.name = name
+        self.abilities = dict([[ability, _roll('3d6')]\
+                               for ability in _ruleset['abilities']])
         self.hp = 6
         self.level = 1
-    
+
+class CharGenerator:
+    def __init__(self):
+        pass

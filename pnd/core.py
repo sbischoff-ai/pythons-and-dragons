@@ -6,10 +6,37 @@ Created on Sat Apr 14 21:05:51 2018
 """
 
 import random as _rd
+import json as _json
 
 _rd.seed()
 
-def roll(dice = '1d20'):
+ruleset = dict(bonus_table    = [[ 3, -3],
+                                 [ 5, -2],
+                                 [ 8, -1],
+                                 [12,  0],
+                                 [15, +1],
+                                 [17, +2],
+                                 [18, +3]],
+                abilities     = ['STR', 'DEX', 'CON',
+                                  'INT', 'WIS', 'CHA'],
+                saving_throws = ['Paralyze','Poison', 'Breath',
+                                 'Device', 'Magic'])
+
+def save_ruleset(name:str):
+    '''Stores the ruleset so it can be loaded with 
+    *load_ruleset(name)* later.'''
+    with open('.\\store\\rulesets\\' + name + '.json', mode = 'w') as file:
+        _json.dump(ruleset, file, indent = 2)
+    return None
+
+def load_ruleset(name:str):
+    '''Loads a stored ruleset with the given *name*.'''
+    global ruleset
+    with open('.\\store\\rulesets\\' + name + '.json') as file:
+        ruleset = _json.load(file)
+    return None
+
+def roll(dice:str = '1d20') -> int:
     '''Returns the result of a die roll specified in *dice*.
     
     Parameters
@@ -26,7 +53,7 @@ def roll(dice = '1d20'):
     _______
     int
         Sum of the terms specified in *dice*, where *dn*
-        is a random integer from [1,n].'''
+        is a uniformly distributed random integer from [1,n].'''
     result = 0
     def d(n): return _rd.randint(1,n)
     dice = str(dice).lower().replace(' ', '').replace('-', '+-')\
@@ -58,3 +85,23 @@ def roll(dice = '1d20'):
             else:
                 for i in range(int(term[0])): result += d(n)
     return result
+
+def get_bonus(ability:int) -> int:
+    '''Returns the ability bonus for an ability score within
+    the current ruleset.
+    
+    Parameters
+    __________
+    ability: int
+        The ability score for which to return the bonus.
+    
+    Returns
+    _______
+    int
+        The ability bonus according to the *bonus_table*
+        of the current ruleset.
+    '''
+    for bonus in ruleset['bonus_table']:
+        if ability <= bonus[0]: return bonus[1]
+    return ruleset['bonus_table'][-1][1]
+

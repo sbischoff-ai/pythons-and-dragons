@@ -5,10 +5,13 @@ Created on Sat Apr 14 21:05:51 2018
 @author: silas
 """
 import os as _os
+from appdirs import AppDirs as _AppDirs
 import random as _rd
 import json as _json
 
-_rd.seed()
+_dirs = _AppDirs('pnd', 'sbischoff-ai')
+storepath = _dirs.user_data_dir
+configpath = _dirs.user_config_dir
 
 ruleset = dict( Name           = 'lotfp',
                 Bonus_Table    = [[ 3, -3],

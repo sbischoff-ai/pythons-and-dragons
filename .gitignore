@@ -45,6 +45,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+.pytest_cache/
 
 # Translations
 *.mo
@@ -90,6 +91,9 @@ ENV/
 # Spyder project settings
 .spyderproject
 .spyproject
+
+# Visual Studio settings
+.vscode/
 
 # Rope project settings
 .ropeproject

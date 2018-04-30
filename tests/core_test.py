@@ -11,8 +11,26 @@ sys.path.insert(0, os.path.abspath(os.path.join(\
 import pytest
 from pnd import core
 
+class mock_AppDirs:
+    def __init__(self, tempdir):
+        self.user_data_dir = tempdir.mkdir('user_data')
+        self.user_config_dir = tempdir.mkdir('user_config')
+
+def test_appdata(tmpdir):
+    core._dirs = mock_AppDirs(tmpdir)
+    core.save_ruleset('ruleset1', save_classes = False)
+    assert core.ruleset['Name'] == 'ruleset1'
+    assert os.path.exists(tmpdir.join('user_data', 'ruleset1', 'classes'))
+    assert len(os.listdir(tmpdir.join('user_data', 'ruleset1', 'classes'))) == 0
+    assert 'ruleset.json' in os.listdir(tmpdir.join('user_data', 'ruleset1'))
+    core.save_ruleset('ruleset2')
+    assert core.ruleset['Name'] == 'ruleset2'
+    assert 'Fighter.json' in os.listdir(tmpdir.join('user_data', 'ruleset2', 'classes'))
+    core.save_class('Fighter', target_ruleset = 'ruleset1')
+    assert 'Fighter.json' in os.listdir(tmpdir.join('user_data', 'ruleset1', 'classes'))
+
 def test_roll():
-    for i in range(20):
+    for _ in range(20):
         assert core.roll('1d6') in range(1,7)
         assert core.roll() in range(1,21)
         assert core.roll('1D8MIN 3') in range(3,9)

@@ -4,94 +4,60 @@ Created on Sat Apr 14 21:05:51 2018
 
 @author: silas
 """
-import os as _os
-from appdirs import AppDirs as _AppDirs
-import random as _rd
-import json as _json
+import os
+import appdirs
+import random
+import json
 
-_dirs = _AppDirs('pnd', 'sbischoff-ai')
-storepath = _dirs.user_data_dir
-configpath = _dirs.user_config_dir
+# Init appdirs
+_dirs = appdirs.AppDirs('pnd', 'sbischoff-ai')
+if not os.path.exists(_dirs.user_data_dir):
+    os.makedirs(_dirs.user_data_dir)
+if not os.path.exists(_dirs.user_config_dir):
+    os.makedirs(_dirs.user_config_dir)
 
-ruleset = dict( Name           = 'lotfp',
-                Bonus_Table    = [[ 3, -3],
-                                  [ 5, -2],
-                                  [ 8, -1],
-                                  [12,  0],
-                                  [15, +1],
-                                  [17, +2],
-                                  [18, +3]],
-                Abilities     = ['STR', 'DEX', 'CON',
-                                 'INT', 'WIS', 'CHA'],
-                Saving_Throws = ['Paralyze','Poison', 'Breath',
-                                 'Device', 'Magic'])
-
-classes = dict(
-    Fighter = {'Min_HP' : 8,
-               'Level'  : {
-               1: {'Experience'   : 0,
-                   'Saving_Throws': {'Paralyze': 14,
-                                     'Poison'  : 12,
-                                     'Breath'  : 15,
-                                     'Device'  : 13,
-                                     'Magic'   : 16},
-                   'Hit_Dice'     : '+1d8',
-                   'Spells'       : None,
-                   'To_Hit'       : +1},
-                                     
-               2: {'Experience'   : 2000,
-                   'Saving_Throws': {'Paralyze': 14,
-                                     'Poison'  : 12,
-                                     'Breath'  : 15,
-                                     'Device'  : 13,
-                                     'Magic'   : 16},
-                   'Hit_Dice'     : '+1d8',
-                   'Spells'       : None,
-                   'To_Hit'       : +1},
-                                     
-               3: {'Experience'   : 4000,
-                   'Saving_Throws': {'Paralyze': 14,
-                                     'Poison'  : 12,
-                                     'Breath'  : 15,
-                                     'Device'  : 13,
-                                     'Magic'   : 16},
-                   'Hit_Dice'     : '+1d8',
-                   'Spells'       : None,
-                   'To_Hit'       : +1}
-                          }
-              })
+# Init ruleset
+classes = {}
+ruleset = {}
+def _init_ruleset():
+    global ruleset, classes
+    storepath = os.path.join(os.path.dirname(__file__), 'resources', 'init_store', 'lotfp')
+    with open(os.path.join(storepath, 'ruleset.json')) as file:
+        ruleset = json.load(file)
+    for class_to_load in os.listdir(os.path.join(storepath, 'classes')):
+        with open(os.path.join(storepath, 'classes', class_to_load)) as file:
+            classes[class_to_load.rstrip('.json')] = json.load(file)
+_init_ruleset()
 
 def save_ruleset(name:str, save_classes:bool = True):
     '''Stores the ruleset in file, load with *load_ruleset(name)*.'''
     global ruleset, classes
     ruleset['Name'] = name
-    if name not in _os.listdir('.\\store'):
-        _os.mkdir('.\\store\\' + name)
-        _os.mkdir('.\\store\\' + name + '\\classes')
-    with open('.\\store\\' + name + '\\ruleset.json', mode = 'w') as file:
-        _json.dump(ruleset, file)
+    if not os.path.exists(os.path.join(_dirs.user_data_dir, name)):
+        os.makedirs(os.path.join(_dirs.user_data_dir, name, 'classes'))
+    with open(os.path.join(_dirs.user_data_dir, name, 'ruleset.json'), mode = 'w') as file:
+        json.dump(ruleset, file, indent = 4)
     if save_classes:
         for class_to_save in classes:
-            save_class(class_to_save)
+            save_class(class_to_save, target_ruleset = name)
 
 def load_ruleset(name:str):
     '''Loads a stored ruleset with the given *name*.'''
     global ruleset, classes
-    with open('.\\store\\' + name + '\\ruleset.json') as file:
-        ruleset = _json.load(file)
+    storepath = os.path.join(_dirs.user_data_dir, name)
+    with open(os.path.join(storepath, 'ruleset.json')) as file:
+        ruleset = json.load(file)
     classes.clear()
-    classes_to_load = _os.listdir('.\\store\\' + name + '\\classes')
+    classes_to_load = os.listdir(os.path.join(storepath, 'classes'))
     for class_to_load in classes_to_load:
-        with open('.\\store\\' + name + \
-                  '\\classes\\' + class_to_load) as file:
-            classes[class_to_load.rstrip('.json')] = _json.load(file)
+        with open(os.path.join(storepath, 'classes', class_to_load)) as file:
+            classes[class_to_load.rstrip('.json')] = json.load(file)
 
 def save_class(class_name:str, target_ruleset:str = ruleset['Name']):
     '''Stores the class *class_name* on disk, load with 
     *load_ruleset(name)*.'''
-    with open('.\\store\\' + target_ruleset + '\\classes\\' \
-              + class_name + '.json', mode = 'w') as file:
-        _json.dump(classes[class_name], file)
+    with open(os.path.join(_dirs.user_data_dir, target_ruleset, 'classes', class_name + '.json'), mode = 'w') as file:
+        json.dump(classes[class_name], file, indent = 4)
 
 def roll(dice:str = '1d20') -> int:
     '''Returns the result of a die roll specified in *dice*.
@@ -115,7 +81,7 @@ def roll(dice:str = '1d20') -> int:
         Sum of the terms specified in *dice*, where *dn*
         is a uniformly distributed random integer from [1,n].'''
     result = 0
-    def d(n): return _rd.randint(1,n)
+    def d(n): return random.randint(1,n)
     dice = str(dice).lower().replace(' ', '').replace('-', '+-')\
                     .lstrip('+').split('+')
     _min = float('-inf')
@@ -146,7 +112,7 @@ def roll(dice:str = '1d20') -> int:
             elif term[0].__contains__('of'):
                 pool = term[0].split('of')
                 rolls = []
-                for i in range(int(pool[1])): rolls.append(d(n))
+                for _ in range(int(pool[1])): rolls.append(d(n))
                 sgn = -1 if pool[0].startswith('-') else 1
                 pool[0] = pool[0].lstrip('-')
                 if pool[0].startswith('best'):
@@ -158,30 +124,10 @@ def roll(dice:str = '1d20') -> int:
                 if pool[0] > int(pool[1]): raise ValueError('Count your dice!')
                 result += sgn*sum(rolls[:pool[0]])
             else:
-                for i in range(int(term[0])): result += d(n)
+                for _ in range(int(term[0])): result += d(n)
         first = False
     if result > _max:
         result = _max
     elif result < _min:
         result = _min
-    return result 
-
-def _get_bonus(ability:int) -> int:
-    '''Returns the ability bonus for an ability score according to
-    the current ruleset.
-    
-    Parameters
-    __________
-    ability: int
-        The ability score for which to return the bonus.
-    
-    Returns
-    _______
-    int
-        The ability bonus according to the *bonus_table*
-        of the current ruleset.
-    '''
-    for bonus in ruleset['Bonus_Table']:
-        if ability <= bonus[0]: return bonus[1]
-    return ruleset['Bonus_Table'][-1][1]
-
+    return result
